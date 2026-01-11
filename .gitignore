@@ -1,0 +1,57 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Virtual Environments ---
+.env
+.venv
+env/
+venv/
+ENV/
+
+# --- Environment Configuration (CRITICAL SECURITY) ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- IDEs / Editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints
+
+# --- Testing & Type Checking ---
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# --- OS Specific (Mac/Windows) ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
