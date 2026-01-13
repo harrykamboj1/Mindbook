@@ -102,3 +102,22 @@ def configure_logging(log_filename: str = "application.log") -> None:
         wrapper_class=structlog.stdlib.BoundLogger,  # Use stdlib logger wrapper
         cache_logger_on_first_use=True, #singleton optimization
     )
+
+
+def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
+    return structlog.get_logger(name)
+
+
+def set_request_id(request_id: str) -> None:
+    request_id_var.set(request_id)
+
+def set_user_id(user_id: str) -> None:
+    user_id_var.set(user_id)
+
+def set_project_id(project_id: str) -> None:
+    project_id_var.set(project_id)
+
+def clear_context() -> None:
+    request_id_var.set(None)
+    user_id_var.set(None)
+    project_id_var.set(None)
