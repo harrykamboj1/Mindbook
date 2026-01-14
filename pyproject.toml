@@ -2,9 +2,7 @@
 name = "backend"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "harrykamboj1",email = "singhharnoor116@gmail.com"}
-]
+authors = ["harrykamboj1 <singhharnoor116@gmail.com>"]
 readme = "README.md"
 package-mode = false
 
