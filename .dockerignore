@@ -41,7 +41,7 @@ npm-debug.log
 # Docker
 **/docker-compose*
 **/compose.y*ml
-**/Dockerfile*
+# **/Dockerfile*
 
 # Dependencies
 **/node_modules

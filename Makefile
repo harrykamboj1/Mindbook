@@ -44,3 +44,8 @@ logs-worker:
 	@echo "Showing Worker logs (Ctrl+C to exit)..."
 	docker-compose -p $(PROJECT_NAME) logs -f worker
 
+
+
+start-containers:
+	@echo "Starting Docker containers..."
+	docker-compose up -d
