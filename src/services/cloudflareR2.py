@@ -11,9 +11,10 @@ r2 = boto3.client(
     region_name="auto",
 )
 
+s3_client = r2
 
 def upload_file_to_r2(file_obj, filename: str, content_type: str):
-    r2.upload_fileobj(
+    s3_client.upload_fileobj(
         file_obj,
         appConfig["r2_bucket"],
         filename,
