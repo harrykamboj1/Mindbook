@@ -111,8 +111,8 @@ async def create_project(
         set_project_id(newly_created_project["id"])
         logger.info("project_created", name=project_data.name)
 
-         # Create default project settings for the new project
-         project_settings_data = {
+        # Create default project settings for the new project
+        project_settings_data = {
             "project_id": newly_created_project["id"],
             "embedding_model": "text-embedding-3-large",
             "rag_strategy": "basic",
@@ -477,8 +477,7 @@ def get_chat_history(chat_id: str, exclude_message_id: str = None) -> List[Dict[
     Returns:
         List of message dictionaries with 'role' and 'content' keys
     """
-      try:
-
+    try:
         query = (
             supabase.table("messages")
             .select("id, role, content")
@@ -489,7 +488,6 @@ def get_chat_history(chat_id: str, exclude_message_id: str = None) -> List[Dict[
         if exclude_message_id:
             query = query.neq("id", exclude_message_id)
 
-
         messages_result = query.execute()
 
         if not messages_result.data:
@@ -497,7 +495,6 @@ def get_chat_history(chat_id: str, exclude_message_id: str = None) -> List[Dict[
 
         # Get last 10 messages (limit to 10 total messages)
         recent_messages = messages_result.data[-10:]
-
 
         # Format messages for agent
         formatted_history = []
@@ -512,7 +509,7 @@ def get_chat_history(chat_id: str, exclude_message_id: str = None) -> List[Dict[
 
     except Exception:
         # If history retrieval fails, return empty list
-        return [] 
+        return []
 
 
 @router.post("/{project_id}/chats/{chat_id}/messages")

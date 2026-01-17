@@ -70,9 +70,9 @@ async def get_project_files(
 
 @router.post("/{project_id}/files/upload-url")
 async def get_upload_presigned_url(
-  project_id:str,
-  file_upload_request: FileUploadRequest,
-  current_user_clerk_id: str = Depends(get_current_user_clerk_id),
+    project_id: str,
+    file_upload_request: FileUploadRequest,
+    current_user_clerk_id: str = Depends(get_current_user_clerk_id),
 ):
         
     """
@@ -88,38 +88,38 @@ async def get_upload_presigned_url(
     set_user_id(current_user_clerk_id)
 
     try:
-      logger.info("generating_upload_url", filename=file_upload_request.filename, file_size=file_upload_request.file_size)
+        logger.info("generating_upload_url", filename=file_upload_request.filename, file_size=file_upload_request.file_size)
 
-      project_ownership_verification_result = (
-        supabase.table("projects")
+        project_ownership_verification_result = (
+            supabase.table("projects")
             .select("id")
             .eq("id", project_id)
             .eq("clerk_id", current_user_clerk_id)
             .execute()
-      )
-      if not project_ownership_verification_result.data:
+        )
+        if not project_ownership_verification_result.data:
             logger.warning("project_not_found_for_upload")
             raise HTTPException(
                 status_code=404,
                 detail="Project not found or you don't have permission to upload files to this project",
             )
 
-      # Generate s3 key
-      file_extension = (
+        # Generate s3 key
+        file_extension = (
             file_upload_request.filename.split(".")[-1]
             if "." in file_upload_request.filename
             else ""
         )
 
-      unique_file_id = uuid.uuid4()
-      s3_key = (
-        f"projects/{project_id}/documents/{unique_file_id}.{file_extension}"
+        unique_file_id = uuid.uuid4()
+        s3_key = (
+            f"projects/{project_id}/documents/{unique_file_id}.{file_extension}"
             if file_extension
             else f"projects/{project_id}/documents/{unique_file_id}"
-      ) 
+        )
 
-       # Generate upload presigned url (will expire in 1 hour)
-       presigned_url = s3_client.generate_presigned_url(
+        # Generate upload presigned url (will expire in 1 hour)
+        presigned_url = s3_client.generate_presigned_url(
             "put_object",
             Params={
                 "Bucket": appConfig["r2_bucket_name"],
@@ -129,7 +129,7 @@ async def get_upload_presigned_url(
             ExpiresIn=3600,  # 1 hour
         )
 
-      if not presigned_url:
+        if not presigned_url:
             logger.error("presigned_url_generation_failed", s3_key=s3_key)
             raise HTTPException(
                 status_code=422,
@@ -187,8 +187,7 @@ async def confirm_file_upload_to_s3(
     confirm_file_upload_request: dict,
     current_user_clerk_id: str = Depends(get_current_user_clerk_id),
 ):
-   
-   """
+    """
     ! Logic Flow:
     * 1. Verify S3 key is provided
     * 2. Verify file exists in database
@@ -200,18 +199,18 @@ async def confirm_file_upload_to_s3(
     set_project_id(project_id)
     set_user_id(current_user_clerk_id)
     try:
-      s3_key = confirm_file_upload_request.get("s3_key")
-      logger.info("confirming_file_upload", s3_key=s3_key)
+        s3_key = confirm_file_upload_request.get("s3_key")
+        logger.info("confirming_file_upload", s3_key=s3_key)
 
-      if not s3_key:
-        logger.warning("s3_key_missing")
-        raise HTTPException(
+        if not s3_key:
+            logger.warning("s3_key_missing")
+            raise HTTPException(
                 status_code=400,
                 detail="S3 key is required",
             )
 
-      # Verify file exists in database
-      document_verification_result = (
+        # Verify file exists in database
+        document_verification_result = (
             supabase.table("project_documents")
             .select("id")
             .eq("s3_key", s3_key)
@@ -220,7 +219,7 @@ async def confirm_file_upload_to_s3(
             .execute()
         )
 
-      if not document_verification_result.data:
+        if not document_verification_result.data:
             logger.warning("file_not_found_for_confirmation", s3_key=s3_key)
             raise HTTPException(
                 status_code=404,

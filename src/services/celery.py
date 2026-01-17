@@ -2,7 +2,12 @@ from celery import Celery
 from src.config import appConfig
 from src.config.logging import get_logger
 from celery.signals import task_prerun, task_postrun, task_failure, worker_process_init
+from src.rag.ingestion.index import process_document
+from src.config.logging import configure_logging, get_logger, set_request_id, clear_context
 
+
+# Configure logging for Celery worker with dedicated log file
+configure_logging(log_filename="worker.log")
 
 app = Celery(
     "mindbook-multi-model-rag",
