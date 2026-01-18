@@ -1,5 +1,5 @@
 from celery import Celery
-from src.config import appConfig
+from src.config.index import appConfig
 from src.config.logging import get_logger
 from celery.signals import task_prerun, task_postrun, task_failure, worker_process_init
 from src.rag.ingestion.index import process_document

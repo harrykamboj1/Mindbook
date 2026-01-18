@@ -21,7 +21,7 @@ services:
             context: .
             dockerfile: Dockerfile
         image: server-rag:1.0.0
-        container_name: server-rag-api
+        container_name: server
         ports:
             - "8000:8000"
         env_file:
@@ -41,7 +41,7 @@ services:
 
     worker:
         image: server-rag:1.0.0
-        container_name: rag-worker
+        container_name: celery-worker
         env_file:
             - .env
         environment:
