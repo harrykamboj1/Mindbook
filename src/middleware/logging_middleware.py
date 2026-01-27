@@ -1,6 +1,6 @@
-from config.logging import clear_context
-from config.logging import get_logger
-from config.logging import set_request_id
+from src.config.logging import clear_context
+from src.config.logging import get_logger
+from src.config.logging import set_request_id
 import uuid
 from typing import Callable
 import time

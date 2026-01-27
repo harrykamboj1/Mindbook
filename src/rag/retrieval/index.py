@@ -7,7 +7,7 @@ from src.rag.retrieval.utils import (
 )
 
 from typing import List,Dict
-from src.config.index import get_logger,set_project_id
+from src.config.logging import get_logger, set_project_id
 from src.services.llm import openAI
 from fastapi import HTTPException
 from src.services.supabase import supabase

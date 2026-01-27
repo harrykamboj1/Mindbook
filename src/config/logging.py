@@ -29,7 +29,7 @@ def get_log_level() -> int:
     }.get(log_level_str, logging.INFO)
 
 
-def add_context_info(event_dict: EventDict) -> EventDict:
+def add_context_info(logger: WrappedLogger, method_name: str, event_dict: EventDict) -> EventDict:
     request_id = request_id_var.get()
     if request_id:
         event_dict["request_id"] = request_id

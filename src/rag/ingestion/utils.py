@@ -94,45 +94,41 @@ def separate_content_types(chunk, source_type="file"):
         "types": ["text"],
     }
 
-     # Check for tables and images in original elements
-     if hasattr(chunk, "metadata") and hasattr(
-        chunk.metadata, "orig_elements"
-    ):
-     # orig_elements list all the atomic elements in the chunk.
-     for element in chunk.metadata.orig_elements:
-        element_type = type(element).__name__
+    # Check for tables and images in original elements
+    if hasattr(chunk, "metadata") and hasattr(chunk.metadata, "orig_elements"):
+        # orig_elements list all the atomic elements in the chunk.
+        for element in chunk.metadata.orig_elements:
+            element_type = type(element).__name__
 
-        # Handle tables
-        if element_type == "Table":
-            content_data["types"].append("table")
-            # getattr is a built-in function that returns the value of the named attribute of an object.
-            # text_as_html will return the HTML representation of the table if it exists, otherwise it will return the text attribute of the element.
-            table_html = getattr(element.metadata, "text_as_html", element.text)
-            content_data["tables"].append(table_html)
+            # Handle tables
+            if element_type == "Table":
+                content_data["types"].append("table")
+                # getattr is a built-in function that returns the value of the named attribute of an object.
+                # text_as_html will return the HTML representation of the table if it exists, otherwise it will return the text attribute of the element.
+                table_html = getattr(element.metadata, "text_as_html", element.text)
+                content_data["tables"].append(table_html)
 
-        # Handle images (skip for URL sources)
-        elif element_type == "Image" and not is_url_source:
-            if (
-                hasattr(element,"metadata")
-                and hasattr(element.metadata,"image_base64")
-                and element.metadata.image_base64 is not None
-            ):
-              content_data["types"].append("image")
-              content_data["images"].append(element.metadata.image_base64)
+            # Handle images (skip for URL sources)
+            elif element_type == "Image" and not is_url_source:
+                if (
+                    hasattr(element, "metadata")
+                    and hasattr(element.metadata, "image_base64")
+                    and element.metadata.image_base64 is not None
+                ):
+                    content_data["types"].append("image")
+                    content_data["images"].append(element.metadata.image_base64)
 
+    content_data["types"] = list(set(content_data["types"]))
 
+    # Return the content data (Below is the example return structure)
+    # {
+    #     "text": "This is the main text content of the chunk...",
+    #     "tables": ["<table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>"],
+    #     "images": ["iVBORw0KGgoAAAANSUhEUgAA..."],  # base64 encoded image strings
+    #     "types": ["text", "table", "image"]  # or ["text"], ["text", "table"], etc.
+    # }
 
-      content_data["types"] = list(set(content_data["types"]))
-
-      # Return the content date (Below is the example return structure)
-      # {
-      #     "text": "This is the main text content of the chunk...",
-      #     "tables": ["<table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>"],
-      #     "images": ["iVBORw0KGgoAAAANSUhEUgAA..."],  # base64 encoded image strings
-      #     "types": ["text", "table", "image"]  # or ["text"], ["text", "table"], etc.
-      # }        
-
-      return content_data
+    return content_data
 
 def get_page_number(chunk, chunk_index):
     """Get page number from chunk or use fallback"""
