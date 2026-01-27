@@ -49,8 +49,7 @@ services:
             - SUPABASE_API_URL=http://host.docker.internal:54321
         extra_hosts:
             - "host.docker.internal:host-gateway"
-        command: >
-            celery -A src.services.celery:app worker --loglevel=info --pool=threads
+        command: celery -A src.services.celery:app worker --loglevel=info --pool=threads
         restart: unless-stopped
         depends_on:
             redis:
