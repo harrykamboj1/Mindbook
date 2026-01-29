@@ -177,7 +177,7 @@ def download_content_and_partition(document_id: str, document: dict):
             file_type = filename.split(".")[-1].lower()
             temp_file_path = f"/tmp/{document_id}.{file_type}"
             logger.info("downloading_from_s3", document_id=document_id, s3_key=s3_key, file_type=file_type)
-            s3_client.download_file(appConfig["r2_bucket_name"], s3_key, temp_file_path)
+            s3_client.download_file(appConfig["r2_bucket"], s3_key, temp_file_path)
             logger.info("s3_download_completed", document_id=document_id)
             elements = partition_document(temp_file_path, file_type)
 
@@ -234,7 +234,7 @@ def summarise_chunks(chunks, document_id, source_type="file"):
     """
 
     try:
-        process_chunks = []
+        processed_chunks = []
         total_chunks = len(chunks)
         for i, chunk in enumerate(chunks):
             current_chunk = i + 1

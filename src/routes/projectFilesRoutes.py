@@ -119,12 +119,13 @@ async def get_upload_presigned_url(
         )
 
         # Generate upload presigned url (will expire in 1 hour)
+        # Note: We don't include ContentType in signed params because browser file.type
+        # detection can differ slightly from what frontend sends, causing signature mismatch
         presigned_url = s3_client.generate_presigned_url(
             "put_object",
             Params={
-                "Bucket": appConfig["r2_bucket_name"],
+                "Bucket": appConfig["r2_bucket"],
                 "Key": s3_key,
-                "ContentType": file_upload_request.file_type,
             },
             ExpiresIn=3600,  # 1 hour
         )
@@ -415,7 +416,7 @@ async def delete_project_document(
         s3_key = document_ownership_verification_result.data[0]["s3_key"]
         if s3_key:
             logger.info("deleting_from_s3", file_id=file_id, s3_key=s3_key)
-            s3_client.delete_object(Bucket=appConfig["r2_bucket_name"], Key=s3_key)
+            s3_client.delete_object(Bucket=appConfig["r2_bucket"], Key=s3_key)
 
         # Delete document from database
         document_deletion_result = (
