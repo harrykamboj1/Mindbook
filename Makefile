@@ -49,3 +49,7 @@ logs-worker:
 start-containers:
 	@echo "Starting Docker containers..."
 	docker-compose up -d
+
+build:
+	@echo "Building Docker images..."
+	docker-compose -p $(PROJECT_NAME) build
