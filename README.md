@@ -1,22 +1,22 @@
-# 🧠 Mindbook Backend API
+# Mindbook Backend API
 
-A powerful FastAPI-based backend for **Mindbook** — an intelligent document management and RAG (Retrieval-Augmented Generation) system that enables smart interactions with your documents.
-
----
-
-## ✨ Features
-
-- **🔐 Authentication** — Clerk-based user authentication and authorization
-- **📁 Project Management** — Create, manage, and organize document projects
-- **📄 Document Processing** — Ingest and process multiple document types (PDFs, web pages, etc.)
-- **🤖 AI-Powered Chat** — Chat with your documents using advanced RAG techniques
-- **🔍 Intelligent Retrieval** — Context-aware document search and retrieval
-- **⚡ Async Processing** — Background task processing with Celery and Redis
-- **☁️ Cloud Storage** — AWS S3 and Cloudflare R2 integration for file storage
+A powerful FastAPI-based backend for **Mindbook** an intelligent document management and RAG (Retrieval-Augmented Generation) system that enables smart interactions with your documents.
 
 ---
 
-## 🏗️ Architecture
+## Features
+
+- Authentication — Clerk-based user authentication and authorization
+- Project Management — Create, manage, and organize document projects
+- Document Processing — Ingest and process multiple document types (PDFs, web pages, etc.)
+- AI-Powered Chat — Chat with your documents using advanced RAG techniques
+- Intelligent Retrieval — Context-aware document search and retrieval
+- Async Processing — Background task processing with Celery and Redis
+- Cloud Storage — AWS S3 and Cloudflare R2 integration for file storage
+
+---
+
+##  Architecture
 
 ```
 backend/
@@ -53,29 +53,33 @@ backend/
 
 ### System Design Diagrams
 
-> 📍 Architecture diagrams are located in `../frontend/public/`
+> Architecture diagrams
+
 
 #### High-Level Design
-![High Level Design](../frontend/public/hld.png)
+<img width="1074" height="461" alt="hld" src="https://github.com/user-attachments/assets/99fe3c04-78b2-4651-9b75-7f805046679a" />
 
 #### RAG Pipeline Architecture
-![RAG Pipeline](../frontend/public/Rag_pipeline_architecture.png)
+<img width="1278" height="258" alt="Rag_pipeline_architecture" src="https://github.com/user-attachments/assets/db865def-16da-4a0a-aa5b-051d6f9dad96" />
 
 #### RAG Agent Flow
-![RAG Agent](../frontend/public/rag_agent.png)
+<img width="1072" height="718" alt="rag_agent" src="https://github.com/user-attachments/assets/110bc92c-c005-4f76-b9d3-81e6a5c19d4c" />
 
 #### Retrieval Pipeline
-![Retrieval Pipeline](../frontend/public/retreival_pipeline.png)
+<img width="1188" height="416" alt="retreival_pipeline" src="https://github.com/user-attachments/assets/d1c6b6a3-2f9d-44d2-8a40-c7020350a1bb" />
+
 
 #### Database Schema
-![Database Schema](../frontend/public/database_schema.png)
+<img width="841" height="752" alt="database_schema" src="https://github.com/user-attachments/assets/7257f96e-c56f-4ef4-bfaa-7962e39d0dbd" />
+
 
 #### Server Dependency Architecture
-![Server Architecture](../frontend/public/server_dependency_architecture.png)
+<img width="963" height="711" alt="Screenshot 2026-01-29 at 11 51 44 PM" src="https://github.com/user-attachments/assets/2c0cd566-c95e-46cf-8884-711628621490" />
 
----
 
-## 🚀 Quick Start
+
+
+## Quick Start
 
 ### Prerequisites
 
@@ -148,7 +152,7 @@ docker-compose up -d
 
 ---
 
-## 📚 API Endpoints
+##  API Endpoints
 
 ### Health
 | Method | Endpoint | Description |
@@ -179,7 +183,7 @@ docker-compose up -d
 
 ---
 
-## 🛠️ Development
+##  Development
 
 ### Local Development (without Docker)
 
@@ -208,7 +212,7 @@ poetry run pytest
 
 ---
 
-## 🐳 Docker Services
+## Docker Services
 
 The `docker-compose.yml` defines three services:
 
@@ -220,7 +224,7 @@ The `docker-compose.yml` defines three services:
 
 ---
 
-## 📦 Key Dependencies
+## Key Dependencies
 
 | Package | Purpose |
 |---------|---------|
@@ -239,7 +243,7 @@ The `docker-compose.yml` defines three services:
 
 ---
 
-## 🔧 Configuration
+##  Configuration
 
 ### Logging
 
@@ -254,14 +258,6 @@ To apply migrations:
 ```bash
 npx supabase db push
 ```
-
----
-
-## 📝 License
-
-This project is private and proprietary.
-
----
 
 ## 👤 Author
 
