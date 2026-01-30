@@ -51,6 +51,28 @@ backend/
 └── pyproject.toml              # Python dependencies (Poetry)
 ```
 
+### System Design Diagrams
+
+> 📍 Architecture diagrams are located in `../frontend/public/`
+
+#### High-Level Design
+![High Level Design](../frontend/public/hld.png)
+
+#### RAG Pipeline Architecture
+![RAG Pipeline](../frontend/public/Rag_pipeline_architecture.png)
+
+#### RAG Agent Flow
+![RAG Agent](../frontend/public/rag_agent.png)
+
+#### Retrieval Pipeline
+![Retrieval Pipeline](../frontend/public/retreival_pipeline.png)
+
+#### Database Schema
+![Database Schema](../frontend/public/database_schema.png)
+
+#### Server Dependency Architecture
+![Server Architecture](../frontend/public/server_dependency_architecture.png)
+
 ---
 
 ## 🚀 Quick Start
