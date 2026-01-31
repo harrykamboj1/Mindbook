@@ -19,9 +19,9 @@ router = APIRouter(tags=["projectFilesRoutes"])
 
   - GET `/{project_id}/files` ~ List all project files
   - POST `/{project_id}/files/upload-url` ~ Generate presigned url for file upload for frontend
-  - POST `/{project_id}/files/confirm` ~ Confirmation of file upload to S3
+  - POST `/{project_id}/files/confirm` ~ Confirmation of file upload to Cloudflare R2
   - POST `/{project_id}/urls` ~ Add website URL to database
-  - DELETE `/{project_id}/files/{file_id}` ~ Delete document from s3 and database
+  - DELETE `/{project_id}/files/{file_id}` ~ Delete document from Cloudflare R2 and database
   - GET `/{project_id}/files/{file_id}/chunks` ~ Get project document chunks
 """
 
@@ -190,7 +190,7 @@ async def confirm_file_upload_to_s3(
 ):
     """
     ! Logic Flow:
-    * 1. Verify S3 key is provided
+    * 1. Verify R2 key is provided
     * 2. Verify file exists in database
     * 3. Update file status to "queued"
     * 4. Perform Celery - RAG Ingestion Task
@@ -207,7 +207,7 @@ async def confirm_file_upload_to_s3(
             logger.warning("s3_key_missing")
             raise HTTPException(
                 status_code=400,
-                detail="S3 key is required",
+                detail="R2 key is required",
             )
 
         # Verify file exists in database
@@ -224,7 +224,7 @@ async def confirm_file_upload_to_s3(
             logger.warning("file_not_found_for_confirmation", s3_key=s3_key)
             raise HTTPException(
                 status_code=404,
-                detail="File not found or you don't have permission to confirm upload to S3 for this file",
+                detail="File not found or you don't have permission to confirm upload to Cloudflare R2 for this file",
             )
 
         # Update file status to "queued"
@@ -265,7 +265,7 @@ async def confirm_file_upload_to_s3(
 
         logger.info("file_upload_confirmed_successfully", document_id=document_id, task_id=task_id)
         return {
-            "message": "File upload to S3 confirmed successfully And Started Background Pre-Processing of this file",
+            "message": "File upload to Cloudflare R2 confirmed successfully And Started Background Pre-Processing of this file",
             "data": document_update_result.data[0],
         }
 
@@ -276,7 +276,7 @@ async def confirm_file_upload_to_s3(
         logger.error("file_confirmation_error", s3_key=s3_key, error=str(e), exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"An internal server error occurred while confirming upload to S3 for {project_id}: {str(e)}",
+            detail=f"An internal server error occurred while confirming upload to Cloudflare R2 for {project_id}: {str(e)}",
         )
 
 
@@ -387,7 +387,7 @@ async def delete_project_document(
     """
     ! Logic Flow:
     * 1. Verify document exists and belongs to the current user and take complete project document record
-    * 2. Delete file from S3 (only for actual files, not for URLs)
+    * 2. Delete file from Cloudflare R2 (only for actual files, not for URLs)
     * 3. Delete document from database
     * 4. Return successfully deleted document data
     """
@@ -412,7 +412,7 @@ async def delete_project_document(
                 detail="Document not found or you don't have permission to delete this document",
             )
 
-        # Delete file from S3 (only for actual files, not for URLs)
+        # Delete file from Cloudflare R2 (only for actual files, not for URLs)
         s3_key = document_ownership_verification_result.data[0]["s3_key"]
         if s3_key:
             logger.info("deleting_from_s3", file_id=file_id, s3_key=s3_key)

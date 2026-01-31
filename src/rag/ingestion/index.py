@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 def process_document(document_id:str):
     """
-    * Step 1 : Download from S3 (file) or Crawl the URL (url) and Extract text, tables, and images from the PDF (using Unstructured Library) from the AWS S3 document.
+    * Step 1 : Download from Cloudflare R2 (file) or Crawl the URL (url) and Extract text, tables, and images from the PDF (using Unstructured Library) from the Cloudflare R2 document.
     * Step 2 : Split the extracted content into chunks.
     * Step 3 : Generate AI summaries for each chunk.
     * Step 4 : Create vector embeddings of chunk and store in PostgreSQL.
@@ -36,7 +36,7 @@ def process_document(document_id:str):
 
         logger.info("document_retrieved", document_id=document_id, source_type=document.get("source_type"))
 
-         # Step 1 : Download from S3 (file) or Crawl the URL (url) and Extract content.
+         # Step 1 : Download from Cloudflare R2 (file) or Crawl the URL (url) and Extract content.
 
         update_status_in_database(document_id, ProcessingStatus.PARTITIONING)
         elements_summary, elements = download_content_and_partition(document_id, document)
@@ -161,7 +161,7 @@ def update_status_in_database(
 def download_content_and_partition(document_id: str, document: dict):
     """
     Content either a file or a url.
-    if :  Document - Download from S3
+    if :  Document - Download from Cloudflare R2
     else : URL - Crawl the URL
     Partition into elements like text, tables, images, etc. and analyze the elements summary and upload to db.
     """

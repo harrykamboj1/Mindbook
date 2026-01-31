@@ -12,7 +12,7 @@ A powerful FastAPI-based backend for **Mindbook** an intelligent document manage
 - AI-Powered Chat — Chat with your documents using advanced RAG techniques
 - Intelligent Retrieval — Context-aware document search and retrieval
 - Async Processing — Background task processing with Celery and Redis
-- Cloud Storage — AWS S3 and Cloudflare R2 integration for file storage
+- Cloud Storage — Cloudflare R2 integration for file storage
 
 ---
 
@@ -109,9 +109,9 @@ Fill in the required environment variables:
 | `SUPABASE_API_URL` | Local Supabase API URL (e.g., `http://localhost:54321`) |
 | `SUPABASE_SECRET_KEY` | Supabase service role key |
 | `CLERK_SECRET_KEY` | Clerk authentication secret |
-| `AWS_ACCESS_KEY_ID` | AWS credentials for S3 |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key |
-| `S3_BUCKET_NAME` | S3 bucket for file storage |
+| `AWS_ACCESS_KEY_ID` | Cloudflare R2 Access Key ID |
+| `AWS_SECRET_ACCESS_KEY` | Cloudflare R2 Secret Access Key |
+| `R2_BUCKET_NAME` | Cloudflare R2 bucket for file storage |
 | `REDIS_URL` | Redis connection URL |
 | `OPENAI_API_KEY` | OpenAI API key for LLM |
 | `TAVILY_API_KEY` | Tavily API for web search |
@@ -236,7 +236,7 @@ The `docker-compose.yml` defines three services:
 | **Redis** | Message broker & caching |
 | **Supabase** | Database and authentication |
 | **Unstructured** | Document parsing and processing |
-| **Boto3** | AWS S3 integration |
+| **Boto3** | Cloudflare R2 integration |
 | **Clerk** | User authentication |
 | **Structlog** | Structured logging |
 | **RAGAS** | RAG evaluation framework |
