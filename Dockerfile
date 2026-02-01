@@ -1,30 +1,49 @@
-FROM python:3.13-slim
+# Stage 1: Builder - Export requirements
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    poppler-utils \
-    tesseract-ocr \
-    libmagic-dev \
-    libgl1 \
-    libglib2.0-0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install Poetry and export plugin
+RUN pip install --no-cache-dir poetry poetry-plugin-export
 
-# Install Poetry
-RUN pip install --no-cache-dir poetry
-
-# Copy dependency files first for better layer caching
+# Copy dependency files
 COPY pyproject.toml poetry.lock* ./
 
-# Configure Poetry to not create virtual env (we're already in a container)
-RUN poetry config virtualenvs.create false
+# Export to requirements.txt (without dev dependencies)
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --without dev
 
-# Install dependencies
-RUN poetry install --no-interaction --no-ansi --no-root
 
-# Copy the rest of the application
+# Stage 2: Final - Minimal runtime image
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install only essential runtime dependencies
+# - poppler-utils: for PDF text extraction with pdfminer
+# - libmagic1: for file type detection
+# Removed: tesseract-ocr, libgl1, libglib2.0-0 (not needed without unstructured ML)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    poppler-utils \
+    libmagic1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -rf /root/.cache
+
+# Copy requirements from builder
+COPY --from=builder /app/requirements.txt .
+
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir --compile -r requirements.txt \
+    && rm -rf /root/.cache/pip \
+    && find /usr/local/lib/python3.12 -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true \
+    && find /usr/local/lib/python3.12 -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true \
+    && find /usr/local/lib/python3.12 -type d -name "test" -exec rm -rf {} + 2>/dev/null || true \
+    && find /usr/local/lib/python3.12 -type f -name "*.pyc" -delete 2>/dev/null || true \
+    && find /usr/local/lib/python3.12 -type f -name "*.pyo" -delete 2>/dev/null || true
+
+# Copy application code
 COPY . .
 
+# Default command (can be overridden for Celery)
 EXPOSE 8000
 CMD ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,50 +1,283 @@
-from unstructured.partition.html import partition_html
-from unstructured.partition.pdf import partition_pdf
-from unstructured.partition.docx import partition_docx
-from unstructured.partition.pptx import partition_pptx
-from unstructured.partition.text import partition_text
-from unstructured.partition.md import partition_md
+import os
+from dataclasses import dataclass
+from typing import List, Any
+
+# Use lightweight extractors instead of unstructured (which requires ~4GB of ML dependencies)
+from pdfminer.high_level import extract_text as pdf_extract_text
+from pdfminer.layout import LAParams
+from docx import Document as DocxDocument
+from pptx import Presentation
+import html
 
 from src.services.llm import openAI
 from langchain_core.messages import HumanMessage
 
 
+@dataclass
+class SimpleElement:
+    """Simple element to mimic unstructured's element structure"""
+    text: str
+    element_type: str = "NarrativeText"
+    metadata: Any = None
+
+    def __post_init__(self):
+        if self.metadata is None:
+            self.metadata = SimpleMetadata()
+
+
+@dataclass  
+class SimpleMetadata:
+    """Simple metadata to mimic unstructured's metadata structure"""
+    page_number: int = 1
+    orig_elements: List[Any] = None
+    
+    def __post_init__(self):
+        if self.orig_elements is None:
+            self.orig_elements = []
+
+
+def _extract_pdf(filename: str) -> List[SimpleElement]:
+    """Extract text from PDF using pdfminer (lightweight, no ML required)"""
+    laparams = LAParams()
+    text = pdf_extract_text(filename, laparams=laparams)
+    
+    # Split by pages (rough approximation - pdfminer doesn't give page breaks easily)
+    paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+    
+    elements = []
+    for i, para in enumerate(paragraphs):
+        metadata = SimpleMetadata(page_number=(i // 10) + 1)  # Rough page estimation
+        elements.append(SimpleElement(text=para, element_type="NarrativeText", metadata=metadata))
+    
+    return elements
+
+
+def _extract_docx(filename: str) -> List[SimpleElement]:
+    """Extract text from DOCX using python-docx"""
+    doc = DocxDocument(filename)
+    elements = []
+    
+    for i, para in enumerate(doc.paragraphs):
+        if para.text.strip():
+            element_type = "Title" if para.style and "heading" in para.style.name.lower() else "NarrativeText"
+            metadata = SimpleMetadata(page_number=1)
+            elements.append(SimpleElement(text=para.text.strip(), element_type=element_type, metadata=metadata))
+    
+    # Also extract tables
+    for table in doc.tables:
+        table_html = "<table>"
+        for row in table.rows:
+            table_html += "<tr>"
+            for cell in row.cells:
+                table_html += f"<td>{html.escape(cell.text)}</td>"
+            table_html += "</tr>"
+        table_html += "</table>"
+        
+        table_element = SimpleElement(text=table_html, element_type="Table", metadata=SimpleMetadata(page_number=1))
+        elements.append(table_element)
+    
+    return elements
+
+
+def _extract_pptx(filename: str) -> List[SimpleElement]:
+    """Extract text from PPTX using python-pptx"""
+    prs = Presentation(filename)
+    elements = []
+    
+    for slide_num, slide in enumerate(prs.slides, 1):
+        for shape in slide.shapes:
+            if hasattr(shape, "text") and shape.text.strip():
+                metadata = SimpleMetadata(page_number=slide_num)
+                elements.append(SimpleElement(text=shape.text.strip(), element_type="NarrativeText", metadata=metadata))
+            
+            # Handle tables in slides
+            if shape.has_table:
+                table = shape.table
+                table_html = "<table>"
+                for row in table.rows:
+                    table_html += "<tr>"
+                    for cell in row.cells:
+                        table_html += f"<td>{html.escape(cell.text)}</td>"
+                    table_html += "</tr>"
+                table_html += "</table>"
+                
+                table_element = SimpleElement(text=table_html, element_type="Table", metadata=SimpleMetadata(page_number=slide_num))
+                elements.append(table_element)
+    
+    return elements
+
+
+def _extract_text(filename: str) -> List[SimpleElement]:
+    """Extract from plain text file"""
+    with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
+        text = f.read()
+    
+    paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+    return [SimpleElement(text=para, element_type="NarrativeText") for para in paragraphs]
+
+
+def _extract_md(filename: str) -> List[SimpleElement]:
+    """Extract from markdown file"""
+    return _extract_text(filename)  # Treat as plain text for now
+
+
+def _extract_html(filename: str) -> List[SimpleElement]:
+    """Extract from HTML file"""
+    with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+    
+    # Simple HTML text extraction (strip tags)
+    import re
+    text = re.sub(r'<[^>]+>', ' ', content)
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return [SimpleElement(text=text, element_type="NarrativeText")]
+
+
 def partition_document(temp_file: str, file_type: str, source_type: str = "file"):
-    """Partition document based on file type and source type"""
+    """Partition document based on file type and source type using lightweight extractors"""
     source = (source_type or "file").lower()
+    
     if source == "url":
-        return partition_html(
-            filename=temp_file,
-        )
+        return _extract_html(temp_file)
 
     kind = (file_type or "").lower()
     dispatch = {
-       "pdf": lambda: partition_pdf(
-            filename=temp_file,
-            strategy="hi_res",  # Most accurate (but slower) processing method of extraction.
-            infer_table_structure=True,  # Keep tables as structured HTML, not jumbled text.
-            extract_image_block_types=["Image"],  # Grab images found in pdf.
-            extract_image_block_to_payload=True,  # Store images as base64 strings in the payload.
-        ),
-        "docx": lambda: partition_docx(
-            filename=temp_file,
-            strategy="hi_res",
-            infer_table_structure=True,
-            # We haven't implemented image extraction for docx,pptx ,md files.
-        ),
-        "pptx": lambda: partition_pptx(
-            filename=temp_file,
-            strategy="hi_res",
-            infer_table_structure=True,
-        ),
-        "txt": lambda: partition_text(filename=temp_file),
-        "md": lambda: partition_md(filename=temp_file),
+        "pdf": _extract_pdf,
+        "docx": _extract_docx,
+        "pptx": _extract_pptx,
+        "txt": _extract_text,
+        "md": _extract_md,
     }
 
     if kind not in dispatch:
         raise ValueError(f"Unsupported file_type: {file_type}")
 
-    return dispatch[kind]()    
+    return dispatch[kind](temp_file)    
+
+
+@dataclass
+class SimpleChunk:
+    """Represents a chunk of content"""
+    text: str
+    metadata: Any = None
+    
+    def __post_init__(self):
+        if self.metadata is None:
+            self.metadata = SimpleChunkMetadata()
+
+
+@dataclass
+class SimpleChunkMetadata:
+    """Metadata for a chunk"""
+    page_number: int = 1
+    orig_elements: List[Any] = None
+    
+    def __post_init__(self):
+        if self.orig_elements is None:
+            self.orig_elements = []
+
+
+def chunk_by_title(
+    elements: List[SimpleElement],
+    max_characters: int = 3000,
+    new_after_n_chars: int = 2400,
+    combine_text_under_n_chars: int = 500,
+) -> List[SimpleChunk]:
+    """
+    Lightweight implementation of chunk_by_title that mimics unstructured's behavior.
+    Groups elements together respecting character limits.
+    """
+    if not elements:
+        return []
+    
+    chunks = []
+    current_texts = []
+    current_elements = []
+    current_char_count = 0
+    current_page = 1
+    
+    for element in elements:
+        element_text = element.text if hasattr(element, 'text') else str(element)
+        element_len = len(element_text)
+        
+        # Get page number from element if available
+        if hasattr(element, 'metadata') and hasattr(element.metadata, 'page_number'):
+            current_page = element.metadata.page_number
+        
+        # Check if this element is a title/header (signals new section)
+        is_title = False
+        if hasattr(element, 'element_type'):
+            is_title = element.element_type in ["Title", "Header"]
+        
+        # Decide if we should start a new chunk
+        should_new_chunk = False
+        
+        # Start new chunk if this is a title and current chunk is substantial
+        if is_title and current_char_count >= combine_text_under_n_chars:
+            should_new_chunk = True
+        
+        # Start new chunk if we've exceeded the soft limit
+        if current_char_count >= new_after_n_chars:
+            should_new_chunk = True
+        
+        # Start new chunk if adding this would exceed hard limit
+        if current_char_count + element_len > max_characters and current_texts:
+            should_new_chunk = True
+        
+        # Create new chunk if needed
+        if should_new_chunk and current_texts:
+            chunk_text = "\n\n".join(current_texts)
+            chunk_metadata = SimpleChunkMetadata(
+                page_number=current_page,
+                orig_elements=current_elements.copy()
+            )
+            chunks.append(SimpleChunk(text=chunk_text, metadata=chunk_metadata))
+            current_texts = []
+            current_elements = []
+            current_char_count = 0
+        
+        # Add element to current chunk
+        current_texts.append(element_text)
+        current_elements.append(element)
+        current_char_count += element_len
+    
+    # Don't forget the last chunk
+    if current_texts:
+        chunk_text = "\n\n".join(current_texts)
+        chunk_metadata = SimpleChunkMetadata(
+            page_number=current_page,
+            orig_elements=current_elements.copy()
+        )
+        chunks.append(SimpleChunk(text=chunk_text, metadata=chunk_metadata))
+    
+    # Combine small chunks if they're under the threshold
+    if len(chunks) > 1:
+        merged_chunks = []
+        i = 0
+        while i < len(chunks):
+            current = chunks[i]
+            
+            # If current chunk is small, try to merge with next
+            while (i + 1 < len(chunks) and 
+                   len(current.text) < combine_text_under_n_chars and
+                   len(current.text) + len(chunks[i + 1].text) <= max_characters):
+                next_chunk = chunks[i + 1]
+                current = SimpleChunk(
+                    text=current.text + "\n\n" + next_chunk.text,
+                    metadata=SimpleChunkMetadata(
+                        page_number=current.metadata.page_number,
+                        orig_elements=current.metadata.orig_elements + next_chunk.metadata.orig_elements
+                    )
+                )
+                i += 1
+            
+            merged_chunks.append(current)
+            i += 1
+        
+        chunks = merged_chunks
+    
+    return chunks    
 
 
 def analyze_elements(elements):

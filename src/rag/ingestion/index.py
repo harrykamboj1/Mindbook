@@ -4,9 +4,8 @@ import time
 from src.services.llm import openAI
 from src.services.cloudflareR2 import s3_client
 from src.config.index import appConfig
-from src.rag.ingestion.utils import partition_document,analyze_elements,separate_content_types,get_page_number,create_ai_summary
+from src.rag.ingestion.utils import partition_document,analyze_elements,separate_content_types,get_page_number,create_ai_summary,chunk_by_title
 from src.models.index import ProcessingStatus
-from unstructured.chunking.title import chunk_by_title
 from src.services.webScrapper import scrapedo_client
 from src.config.logging import get_logger, set_project_id
 
