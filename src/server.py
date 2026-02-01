@@ -46,7 +46,7 @@ app.include_router(chatRoutes, prefix="/api/chats")
 logger.info("routes_registered", route_count=4)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     """Health check endpoint."""
     logger.debug("health_check_called")
