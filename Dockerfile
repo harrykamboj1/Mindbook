@@ -44,6 +44,9 @@ RUN pip install --no-cache-dir --compile -r requirements.txt \
 # Copy application code
 COPY . .
 
-# Default command (can be overridden for Celery)
+# Make start script executable
+RUN chmod +x start.sh
+
+# Expose port and run both API + Celery worker
 EXPOSE 8000
-CMD ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./start.sh"]
